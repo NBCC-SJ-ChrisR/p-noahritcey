@@ -52,6 +52,8 @@ public class PizzaService {
         for(Pizzatopping topping : toppings) {
             PizzaToppingMap map = new PizzaToppingMap();
             map.setPizza(savedPizza);
+            map.setPizzaTopping(topping);
+            toppingMapRepository.save(map);
         }
 
         return savedPizza;
