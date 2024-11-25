@@ -57,6 +57,7 @@ public class PizzaService {
         return savedPizza;
     }
 
+    //Calc pizza price without writing a pizza to the db
     public Float calculatePrice(int sizeId, int crustId, List<Integer> toppingIds) {
         Pizzasize size = pizzasizeRepository.findById(sizeId).orElseThrow(()-> new RuntimeException("Size not found."));
         Pizzacrust crust = pizzacrustRepository.findById(crustId).orElseThrow(() -> new RuntimeException("Crust not found"));
@@ -67,5 +68,27 @@ public class PizzaService {
             price += topping.getPrice();
         }
         return price;
+    }
+
+    public List<PizzaToppingMap> getPizzaToppings(Integer pizzaId) {
+        return toppingMapRepository.findByPizzaId(pizzaId);
+    }
+
+    //Calc the subtotal for pizzas in order
+    public Float calculateSubTotal(List<Pizza> pizzas) {
+        float subTotal = 0.0f;
+        for (Pizza pizza : pizzas) {
+           subTotal += pizza.getTotalPrice();
+        }
+        return subTotal;
+    }
+
+    //Calc tax on subtotal value
+    public Float calculateTax(Float subTotal) {
+        return subTotal * 0.15f;
+    }
+    //Calc total based on subtotal value
+    public Float calculateTotalPrice(Float subtotal) {
+        return subtotal * 1.15f;
     }
 }
