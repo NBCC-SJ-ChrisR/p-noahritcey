@@ -14,10 +14,6 @@ public class EmployeeLoginController {
     private final ToppingService toppingService;
     private final OrderService orderService;
 
-    @GetMapping("/")
-    public String home() {
-        return "redirect:/login";
-    }
 
     @GetMapping("/login")
     public String login() {

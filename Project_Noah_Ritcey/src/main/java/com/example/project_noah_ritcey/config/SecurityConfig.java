@@ -17,7 +17,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/index","buildPizza","/buildPizza/addToCart","/buildPizza/cart").permitAll()
                         .requestMatchers("/employeeDashboard/**").hasRole("EMPLOYEE")
                         .requestMatchers("/**").permitAll()
                 )
