@@ -1,6 +1,7 @@
 package com.example.project_noah_ritcey.controllers;
 
 import com.example.project_noah_ritcey.entities.*;
+import com.example.project_noah_ritcey.objects.CartPizza;
 import com.example.project_noah_ritcey.repositories.PizzacrustRepository;
 import com.example.project_noah_ritcey.repositories.PizzasizeRepository;
 import com.example.project_noah_ritcey.repositories.PizzatoppingRepository;
@@ -27,7 +28,7 @@ public class PizzaController {
     public String showBuildPizza(Model model, HttpSession session) {
 
         if(session.getAttribute("cart") == null) {
-            session.setAttribute("cart", new ArrayList<Pizza>());
+            session.setAttribute("cart", new ArrayList<CartPizza>());
         }
         model.addAttribute("sizes", pizzaService.getAllPizzasize());
         model.addAttribute("crusts", pizzaService.getAllPizzacrust());
@@ -49,9 +50,9 @@ public class PizzaController {
                 toppings = pizzatoppingRepository.findAllById(toppingsIds);
             }
 
-            Pizza pizza = pizzaService.createPizza(size, crust, toppings, quantity);
+            CartPizza pizza = pizzaService.createCartPizza(size, crust, toppings, quantity);
             @SuppressWarnings("unchecked")
-            List<Pizza> cart = (ArrayList<Pizza>) session.getAttribute("cart");
+            List<CartPizza> cart = (ArrayList<CartPizza>) session.getAttribute("cart");
             cart.add(pizza);
             session.setAttribute("cart", cart);
             return "redirect:/buildPizza";
@@ -63,8 +64,15 @@ public class PizzaController {
 
     @GetMapping("/cart")
     public String showCart(Model model, HttpSession session) {
-        List<Pizza> cart = (List<Pizza>) session.getAttribute("cart");
-        Float subtotal = pizzaService.calculateSubTotal(cart);
+        @SuppressWarnings("unchecked")
+        List<CartPizza> cart = (List<CartPizza>) session.getAttribute("cart");
+
+        if (cart == null || cart.isEmpty()) {
+            model.addAttribute("info", "Your cart is empty");
+            return "cart";
+        }
+
+        Float subtotal = pizzaService.calculateCartSubTotal(cart);
         Float tax = pizzaService.calculateTax(subtotal);
         Float total = pizzaService.calculateTotalPrice(subtotal);
 
@@ -74,5 +82,30 @@ public class PizzaController {
         model.addAttribute("total", total);
 
         return "cart";
+    }
+
+    @PostMapping("/cart/update")
+    public String updateCartPizzaQuantity(@RequestParam Integer index,@RequestParam Integer quantity, HttpSession session) {
+
+        @SuppressWarnings("unchecked")
+        List<CartPizza> cart = (ArrayList<CartPizza>) session.getAttribute("cart");
+        if(cart != null && index >=0 && index < cart.size() && quantity > 0) {
+            CartPizza pizza = cart.get(index);
+            pizza.setQuantity(quantity);
+            pizza.setTotalPrice(pizza.getPriceEach() * quantity);
+            session.setAttribute("cart", cart);
+        }
+        return "redirect:/buildPizza/cart";
+    }
+
+    @PostMapping("/cart/remove")
+    public String removeCartPizza(@RequestParam Integer index,HttpSession session) {
+        @SuppressWarnings("unchecked")
+        List<CartPizza> cart = (ArrayList<CartPizza>) session.getAttribute("cart");
+        if(cart != null && index >=0 && index < cart.size()) {
+            cart.remove(index.intValue());
+            session.setAttribute("cart", cart);
+        }
+        return "redirect:/buildPizza/cart";
     }
 }

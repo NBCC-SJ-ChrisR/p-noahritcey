@@ -1,10 +1,12 @@
 package com.example.project_noah_ritcey.services;
 
 import com.example.project_noah_ritcey.entities.*;
+import com.example.project_noah_ritcey.objects.CartPizza;
 import com.example.project_noah_ritcey.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -30,33 +32,39 @@ public class PizzaService {
         return pizzatoppingRepository.findByIsActive((byte)1);
     }
 
-    public Pizza createPizza(Pizzasize size, Pizzacrust crust, List<Pizzatopping> toppings, int quantity) {
+    public CartPizza createCartPizza(Pizzasize size, Pizzacrust crust, List<Pizzatopping> toppings, int quantity) {
 
-        Pizza pizza = new Pizza();
-        pizza.setPizzaSize(size);
-        pizza.setPizzaCrust(crust);
-        pizza.setQuantity(quantity);
+        CartPizza cartPizza = new CartPizza();
+        cartPizza.setPizzacrust(crust);
+        cartPizza.setPizzaSize(size);
+        cartPizza.setQuantity(quantity);
+        cartPizza.setToppings(new ArrayList<>(toppings));
 
         Float basePrice = size.getPrice() + crust.getPrice();
-        Float toppingPrice = 0.0f;
-        for (Pizzatopping topping : toppings) {
-            toppingPrice += topping.getPrice();
-        }
 
-        Float pricePerPizza = basePrice +toppingPrice;
-        pizza.setPriceEach(pricePerPizza);
-        pizza.setTotalPrice(pricePerPizza * quantity);
+        Float toppingPrice = toppings.stream().map(Pizzatopping::getPrice).reduce(0.0f,Float::sum);
 
-        Pizza savedPizza = pizzaRepository.save(pizza);
+        Float pricePerPizza = basePrice + toppingPrice;
 
-        for(Pizzatopping topping : toppings) {
-            PizzaToppingMap map = new PizzaToppingMap();
-            map.setPizza(savedPizza);
-            map.setPizzaTopping(topping);
-            toppingMapRepository.save(map);
-        }
+        cartPizza.setPriceEach(pricePerPizza);
 
-        return savedPizza;
+        cartPizza.setTotalPrice(pricePerPizza * quantity);
+
+        return cartPizza;
+
+    }
+
+    // Convert CartPizza to Pizza entity when creating order
+    public Pizza convertCartPizzaToEntity(CartPizza cartPizza, Order order) {
+        Pizza pizza = new Pizza();
+        pizza.setOrder(order);
+        pizza.setPizzaSize(cartPizza.getPizzaSize());
+        pizza.setPizzaCrust(cartPizza.getPizzacrust());
+        pizza.setQuantity(cartPizza.getQuantity());
+        pizza.setPriceEach(cartPizza.getPriceEach());
+        pizza.setTotalPrice(cartPizza.getTotalPrice());
+
+        return pizza;
     }
 
     //Calc pizza price without writing a pizza to the db
@@ -83,6 +91,15 @@ public class PizzaService {
            subTotal += pizza.getTotalPrice();
         }
         return subTotal;
+    }
+
+    public Float calculateCartSubTotal(List<CartPizza> cartPizzas) {
+        if (cartPizzas == null) return 0.0f;
+        float subtotal = 0.0f;
+        for (CartPizza pizza : cartPizzas) {
+            subtotal += pizza.getTotalPrice();
+        }
+        return subtotal;
     }
 
     //Calc tax on subtotal value
