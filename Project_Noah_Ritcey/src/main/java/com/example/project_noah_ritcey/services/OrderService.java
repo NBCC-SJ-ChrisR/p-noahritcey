@@ -3,8 +3,6 @@ package com.example.project_noah_ritcey.services;
 import com.example.project_noah_ritcey.entities.*;
 import com.example.project_noah_ritcey.repositories.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;

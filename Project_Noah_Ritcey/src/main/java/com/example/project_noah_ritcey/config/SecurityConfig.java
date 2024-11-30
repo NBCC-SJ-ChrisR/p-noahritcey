@@ -1,10 +1,12 @@
 package com.example.project_noah_ritcey.config;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import org.springframework.security.web.SecurityFilterChain;
@@ -37,18 +39,16 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @PostConstruct
+    public void init() {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        String password = "12345";
+        String encodedPassword = passwordEncoder.encode(password);
+        System.out.println("Encrypted password for admin: " + encodedPassword);
+    }
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-       return new PasswordEncoder() {
-           @Override
-           public String encode(CharSequence rawPassword) {
-               return rawPassword.toString();
-           }
-
-           @Override
-           public boolean matches(CharSequence rawPassword, String encodedPassword) {
-               return rawPassword.toString().equals(encodedPassword);
-           }
-       };
+        return new BCryptPasswordEncoder();
     }
 }
