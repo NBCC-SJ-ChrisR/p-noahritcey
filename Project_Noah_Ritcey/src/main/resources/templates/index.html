@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pizza Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="mb-4">Welcome Ritcey Pizza Works</h1>
+
+                    <div class="d-grid gap-3">
+                        <a th:href="@{/buildPizza}" class="btn btn-primary btn-lg">
+                            Order a Pizza
+                        </a>
+                        <a th:href="@{/login}" class="btn btn-secondary btn-lg">
+                            Employee Login
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
