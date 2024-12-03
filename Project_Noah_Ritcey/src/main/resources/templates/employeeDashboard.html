@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Employee Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <span class="navbar-brand">Pizza Shop Management</span>
+        <form th:action="@{/logout}" method="post" class="d-flex">
+            <button class="btn btn-outline-light" type="submit">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="container mt-4">
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab != 'orders'} ? 'active'" id="toppings-tab" data-bs-toggle="tab"
+                    data-bs-target="#toppings" type="button" role="tab">
+                Manage Toppings
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" th:classappend="${activeTab == 'orders'} ? 'active'" id="orders-tab" data-bs-toggle="tab"
+                    data-bs-target="#orders" type="button" role="tab">
+                View Orders
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="myTabContent">
+        <div class="tab-pane fade" th:classappend="${activeTab != 'orders'} ? 'show active'" id="toppings" role="tabpanel">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h4>Add New Topping</h4>
+                    <form th:action="@{/employeeDashboard/addTopping}" method="post" class="mt-3">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label">Topping Name</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Price ($)</label>
+                                <input type="number" step="0.01" class="form-control" name="price" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block">Add Topping</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <h5 class="mt-4">Current Toppings</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Active</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="topping : ${toppings}">
+                                <td th:text="${topping.name}"></td>
+                                <td th:text="${topping.price}"></td>
+                                <td th:text="${topping.isActive == 1 ? 'Yes' : 'No'}"></td>
+                                <td>
+                                    <div class="btn-group">
+                                        <form th:if="${topping.isActive == 1}" th:action="@{/employeeDashboard/deactivateTopping/{id}(id=${topping.id})}" method="POST">
+                                            <button type="submit" class="btn btn-danger btn-sm">Deactivate</button>
+                                        </form>
+                                        <div th:unless="${topping.isActive == 1}">
+                                            <form th:action="@{/employeeDashboard/reactivateTopping/{id}(id=${topping.id})}" method="POST">
+                                                <button type="submit" class="btn btn-success btn-sm">Reactivate</button>
+                                            </form>
+                                        </div>
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" th:data-bs-target="'#editModal' + ${topping.id}">
+                                            Edit
+                                        </button>
+                                    </div>
+
+                                    <!-- Edit Modal -->
+                                    <div class="modal fade" th:id="'editModal' + ${topping.id}" tabindex="-1">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Edit Topping</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <form th:action="@{/employeeDashboard/editTopping/{id}(id=${topping.id})}" method="POST">
+                                                    <div class="modal-body">
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Name</label>
+                                                            <input type="text" class="form-control" name="name" th:value="${topping.name}" required>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Price ($)</label>
+                                                            <input type="number" step="0.01" class="form-control" name="price" th:value="${topping.price}" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" th:classappend="${activeTab == 'orders'} ? 'show active'" id="orders" role="tabpanel">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4>Current Orders</h4>
+                        <div class="btn-group">
+                            <a th:href="@{/employeeDashboard/getOrdersByStatus/PENDING(tab='orders')}"
+                               class="btn btn-outline-primary"
+                               th:classappend="${orderStatus == 'PENDING'} ? 'active'">
+                                Pending
+                            </a>
+                            <a th:href="@{/employeeDashboard/getOrdersByStatus/FULFILLED(tab='orders')}"
+                               class="btn btn-outline-primary"
+                               th:classappend="${orderStatus == 'FULFILLED'} ? 'active'">
+                                Fulfilled
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>Order #</th>
+                                <th>Customer</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="order : ${orders}">
+                                <td th:text="${order.id}"></td>
+                                <td th:text="${order.customer.firstName + ' ' + order.customer.lastName}"></td>
+                                <td th:text="'$' + ${#numbers.formatDecimal(order.orderTotal, 1, 2)}"></td>
+                                <td>
+                                    <span th:class="${order.orderStatus == 'PENDING' ? 'badge bg-warning' : 'badge bg-success'}"
+                                          th:text="${order.orderStatus}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <form th:if="${order.orderStatus == 'PENDING'}"
+                                          th:action="@{/employeeDashboard/changeOrderStatus/{id}(id=${order.id})}"
+                                          method="POST"
+                                          style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">Complete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+```
