@@ -2,7 +2,6 @@ package com.example.project_noah_ritcey.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.LinkedHashSet;
@@ -11,13 +10,18 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@NoArgsConstructor
 @Table(name = "customer")
 public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "customer_id", nullable = false)
     private Integer id;
+
+    @Column(name = "email", nullable = false, length = 45)
+    private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
 
     @Column(name = "firstName", nullable = false, length = 45)
     private String firstName;
@@ -27,9 +31,6 @@ public class Customer {
 
     @Column(name = "phoneNumber", nullable = false, length = 45)
     private String phoneNumber;
-
-    @Column(name = "email", nullable = false, length = 45)
-    private String email;
 
     @Column(name = "houseNumber")
     private Integer houseNumber;

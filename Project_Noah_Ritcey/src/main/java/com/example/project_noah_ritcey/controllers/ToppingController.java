@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -18,7 +20,7 @@ public class ToppingController {
 
 
     @PostMapping("/addTopping")
-    public String addTopping(@RequestParam String name, @RequestParam Float price, Model model) {
+    public String addTopping(@RequestParam String name, @RequestParam BigDecimal price, Model model) {
         try {
             toppingService.addTopping(name, price);
             model.addAttribute("success", "Topping added");
@@ -57,7 +59,7 @@ public class ToppingController {
     }
 
     @PostMapping("/editTopping/{id}")
-    public String editTopping(@PathVariable Integer id, @RequestParam String name, @RequestParam Float price, Model model) {
+    public String editTopping(@PathVariable Integer id, @RequestParam String name, @RequestParam BigDecimal price, Model model) {
         try{
             toppingService.editTopping(id, name, price);
             model.addAttribute("success", "Topping edited");

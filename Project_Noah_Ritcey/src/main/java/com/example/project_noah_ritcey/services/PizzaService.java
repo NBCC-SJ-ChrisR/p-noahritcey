@@ -6,6 +6,8 @@ import com.example.project_noah_ritcey.repositories.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,12 +20,18 @@ public class PizzaService {
     private final PizzaToppingMapRepository toppingMapRepository;
     private final PizzasizeRepository pizzasizeRepository;
 
+    private static final BigDecimal TAX_RATE = new BigDecimal("0.15");
+    private static final BigDecimal TAX_MULTIPLIER = new BigDecimal("1.15");
+    private static final int DECIMAL_PLACES = 2;
+
     public List<Pizzasize> getAllPizzasize() {
         return pizzasizeRepository.findAll();
     }
+
     public List<Pizzatopping> getAllPizzatopping() {
         return pizzatoppingRepository.findAll();
     }
+
     public List<Pizzacrust> getAllPizzacrust() {
         return pizzacrustRepository.findAll();
     }
@@ -33,28 +41,25 @@ public class PizzaService {
     }
 
     public CartPizza createCartPizza(Pizzasize size, Pizzacrust crust, List<Pizzatopping> toppings, int quantity) {
-
         CartPizza cartPizza = new CartPizza();
         cartPizza.setPizzacrust(crust);
         cartPizza.setPizzaSize(size);
         cartPizza.setQuantity(quantity);
         cartPizza.setToppings(new ArrayList<>(toppings));
 
-        Float basePrice = size.getPrice() + crust.getPrice();
+        BigDecimal basePrice = size.getPrice().add(crust.getPrice());
 
-        Float toppingPrice = toppings.stream().map(Pizzatopping::getPrice).reduce(0.0f,Float::sum);
+        BigDecimal toppingPrice = toppings.stream()
+                .map(Pizzatopping::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        Float pricePerPizza = basePrice + toppingPrice;
-
+        BigDecimal pricePerPizza = basePrice.add(toppingPrice);
         cartPizza.setPriceEach(pricePerPizza);
-
-        cartPizza.setTotalPrice(pricePerPizza * quantity);
+        cartPizza.setTotalPrice(pricePerPizza.multiply(BigDecimal.valueOf(quantity)));
 
         return cartPizza;
-
     }
 
-    // Convert CartPizza to Pizza entity when creating order
     public Pizza convertCartPizzaToEntity(CartPizza cartPizza, Order order) {
         Pizza pizza = new Pizza();
         pizza.setOrder(order);
@@ -63,51 +68,50 @@ public class PizzaService {
         pizza.setQuantity(cartPizza.getQuantity());
         pizza.setPriceEach(cartPizza.getPriceEach());
         pizza.setTotalPrice(cartPizza.getTotalPrice());
-
         return pizza;
     }
 
-    //Calc pizza price without writing a pizza to the db
-    public Float calculatePrice(int sizeId, int crustId, List<Integer> toppingIds) {
-        Pizzasize size = pizzasizeRepository.findById(sizeId).orElseThrow(()-> new RuntimeException("Size not found."));
-        Pizzacrust crust = pizzacrustRepository.findById(crustId).orElseThrow(() -> new RuntimeException("Crust not found"));
+    public BigDecimal calculatePrice(int sizeId, int crustId, List<Integer> toppingIds) {
+        Pizzasize size = pizzasizeRepository.findById(sizeId)
+                .orElseThrow(() -> new RuntimeException("Size not found."));
+        Pizzacrust crust = pizzacrustRepository.findById(crustId)
+                .orElseThrow(() -> new RuntimeException("Crust not found"));
         List<Pizzatopping> toppings = pizzatoppingRepository.findAllById(toppingIds);
 
-        Float price = size.getPrice() + crust.getPrice();
-        for (Pizzatopping topping : toppings) {
-            price += topping.getPrice();
-        }
-        return price;
+        return size.getPrice()
+                .add(crust.getPrice())
+                .add(toppings.stream()
+                        .map(Pizzatopping::getPrice)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add))
+                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
     }
 
-    public List<PizzaToppingMap> getPizzaToppings(Integer pizzaId) {
+    public List<PizzatoppingMap> getPizzaToppings(Integer pizzaId) {
         return toppingMapRepository.findByPizzaId(pizzaId);
     }
 
-    //Calc the subtotal for pizzas in order
-    public Float calculateSubTotal(List<Pizza> pizzas) {
-        float subTotal = 0.0f;
-        for (Pizza pizza : pizzas) {
-           subTotal += pizza.getTotalPrice();
-        }
-        return subTotal;
+    public BigDecimal calculateSubTotal(List<Pizza> pizzas) {
+        return pizzas.stream()
+                .map(Pizza::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
     }
 
-    public Float calculateCartSubTotal(List<CartPizza> cartPizzas) {
-        if (cartPizzas == null) return 0.0f;
-        float subtotal = 0.0f;
-        for (CartPizza pizza : cartPizzas) {
-            subtotal += pizza.getTotalPrice();
-        }
-        return subtotal;
+    public BigDecimal calculateCartSubTotal(List<CartPizza> cartPizzas) {
+        if (cartPizzas == null) return BigDecimal.ZERO;
+        return cartPizzas.stream()
+                .map(CartPizza::getTotalPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
     }
 
-    //Calc tax on subtotal value
-    public Float calculateTax(Float subTotal) {
-        return subTotal * 0.15f;
+    public BigDecimal calculateTax(BigDecimal subTotal) {
+        return subTotal.multiply(TAX_RATE)
+                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
     }
-    //Calc total based on subtotal value
-    public Float calculateTotalPrice(Float subtotal) {
-        return subtotal * 1.15f;
+
+    public BigDecimal calculateTotalPrice(BigDecimal subtotal) {
+        return subtotal.multiply(TAX_MULTIPLIER)
+                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -21,7 +23,7 @@ public class ToppingService {
         return pizzaToppingRepository.findAll();
     }
 
-    public void addTopping(String name, Float price) {
+    public void addTopping(String name, BigDecimal price) {
         // Get logged-in user's details
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
@@ -38,6 +40,8 @@ public class ToppingService {
             topping.setPrice(price);
             topping.setIsActive((byte) 1);
             topping.setEmpAddedBy(emp);
+            topping.setCreatedate(Instant.now());
+
 
             pizzaToppingRepository.save(topping);
             System.out.println("Topping saved successfully!");
@@ -54,7 +58,7 @@ public class ToppingService {
         pizzaToppingRepository.save(topping);
     }
 
-    public void editTopping(Integer id, String name, Float price) {
+    public void editTopping(Integer id, String name, BigDecimal price) {
         Pizzatopping pizzatopping = pizzaToppingRepository.findById(id).orElseThrow(() -> new RuntimeException("Topping not found"));
         pizzatopping.setName(name);
         pizzatopping.setPrice(price);

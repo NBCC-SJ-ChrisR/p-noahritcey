@@ -5,10 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -19,20 +17,27 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/index","buildPizza","/buildPizza/addToCart","/buildPizza/cart").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/", "/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/employeeDashboard/**").hasRole("EMPLOYEE")
-                        .requestMatchers("/**").permitAll()
+                        .requestMatchers("/buildPizza/**", "/customer/**").hasRole("CUSTOMER")
+                        .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/employeeDashboard", true)
+                        .successHandler((request, response, authentication) -> {
+                            if (authentication.getAuthorities().stream()
+                                    .anyMatch(a -> a.getAuthority().equals("ROLE_EMPLOYEE"))) {
+                                response.sendRedirect("/employeeDashboard");
+                            } else {
+                                response.sendRedirect("/buildPizza");
+                            }
+                        })
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
                         .permitAll()
                 );
 
@@ -42,9 +47,16 @@ public class SecurityConfig {
     @PostConstruct
     public void init() {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        String password = "12345";
-        String encodedPassword = passwordEncoder.encode(password);
-        System.out.println("Encrypted password for admin: " + encodedPassword);
+
+        // Admin/employee password hash
+        String employeePassword = "12345";
+        String employeeHash = passwordEncoder.encode(employeePassword);
+        System.out.println("UPDATE employee SET password = '" + employeeHash + "' WHERE username = 'admin';");
+
+        // Customer password hash
+        String customerPassword = "54321";
+        String customerHash = passwordEncoder.encode(customerPassword);
+        System.out.println("UPDATE customer SET password = '" + customerHash + "' WHERE email = 'dave@thomas.com';");
     }
 
     @Bean

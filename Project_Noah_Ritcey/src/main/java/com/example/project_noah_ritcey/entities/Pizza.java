@@ -8,6 +8,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -40,12 +41,11 @@ public class Pizza {
     private Integer quantity;
 
     @Column(name = "priceEach", nullable = false)
-    private Float priceEach;
+    private BigDecimal priceEach;
 
     @Column(name = "totalPrice", nullable = false)
-    private Float totalPrice;
+    private BigDecimal totalPrice;
 
     @OneToMany(mappedBy = "pizza")
-    private Set<PizzaToppingMap> pizzatoppingMaps = new LinkedHashSet<>();
-
+    private Set<PizzatoppingMap> pizzatoppingMaps = new LinkedHashSet<>();
 }

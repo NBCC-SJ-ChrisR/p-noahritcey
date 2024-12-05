@@ -3,7 +3,12 @@ package com.example.project_noah_ritcey.entities;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -18,16 +23,23 @@ public class Pizzatopping {
     @Column(name = "name", nullable = false, length = 32)
     private String name;
 
-    @Column(name = "price", nullable = false)
-    private Float price = 0.0f;
+    @ColumnDefault("0.00")
+    @Column(name = "price", nullable = false, precision = 8, scale = 2)
+    private BigDecimal price;
 
-    @Column(name = "createdate", nullable = false, updatable = false)
-    private Instant createdate = Instant.now();
+    @ColumnDefault("current_timestamp()")
+    @Column(name = "createdate", nullable = false)
+    private Instant createdate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "empAddedBy", nullable = false)
     private Employee empAddedBy;
 
+    @ColumnDefault("1")
     @Column(name = "isActive", nullable = false)
-    private Byte isActive = 1;
+    private Byte isActive;
+
+    @OneToMany(mappedBy = "pizzaTopping")
+    private Set<PizzatoppingMap> pizzatoppingMaps = new LinkedHashSet<>();
+
 }

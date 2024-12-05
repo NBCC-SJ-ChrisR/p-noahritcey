@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public class CartPizza {
     private Pizzasize pizzaSize;
     private Pizzacrust pizzacrust;
     private Integer quantity;
-    private Float priceEach;
-    private Float totalPrice;
+    private BigDecimal priceEach;
+    private BigDecimal totalPrice;
     private List<Pizzatopping> toppings = new ArrayList<>();
 }

@@ -15,11 +15,6 @@ public class EmployeeLoginController {
     private final OrderService orderService;
 
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
-
     @GetMapping("/employeeDashboard")
     public String dashboard(Model model) {
         model.addAttribute("toppings", toppingService.getAllToppings());
